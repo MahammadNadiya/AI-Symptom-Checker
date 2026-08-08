@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Symptom Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F8F7;
+    --panel:#FFFFFF;
+    --ink:#182524;
+    --ink-soft:#526461;
+    --teal:#154C4A;
+    --teal-deep:#0D3634;
+    --teal-glow:#1E6E6A;
+    --sage:#6E9A85;
+    --sage-soft:#E4EEE7;
+    --amber:#C98A2C;
+    --amber-soft:#FBF0DD;
+    --coral:#C2482E;
+    --coral-soft:#FBE7E1;
+    --line:#DEE5E2;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Newsreader', serif;
+    font-weight:600;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace; letter-spacing:0.02em;}
+  ::selection{background:var(--sage-soft);color:var(--teal-deep);}
+
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @keyframes drawLine{
+    from{stroke-dashoffset:700;}
+    to{stroke-dashoffset:0;}
+  }
+  @keyframes floatSlow{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-6px);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  /* Pulse-line divider — signature motif */
+  .pulse{width:100%; height:32px; overflow:hidden; margin:0 0 28px 0;}
+  .pulse svg{width:100%;height:100%;display:block;}
+  .pulse path{
+    fill:none; stroke:var(--sage); stroke-width:2;
+    stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:700; stroke-dashoffset:700;
+    animation:drawLine 1.6s ease forwards;
+  }
+  .pulse.small path{stroke-width:1.6;}
+
+  header.top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 40px; border-bottom:1px solid var(--line);
+    background:var(--panel); position:sticky; top:0; z-index:10;
+  }
+  header.top .brand{display:flex; align-items:center; gap:10px;}
+  header.top .brand .mark{
+    width:32px;height:32px; border-radius:9px;
+    background:linear-gradient(155deg, var(--teal), var(--teal-glow));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 10px -3px rgba(21,76,74,0.45);
+  }
+  header.top .brand .mark svg{width:17px;height:17px;stroke:#fff;}
+  header.top h1{font-size:19px;}
+  header.top nav{display:flex;gap:4px;align-items:center;}
+  header.top nav button.navbtn{
+    background:none;border:none;cursor:pointer;
+    font-family:'IBM Plex Sans';font-size:14px;font-weight:500;
+    color:var(--ink-soft);padding:8px 15px;border-radius:8px;
+    transition:all .15s ease;
+  }
+  header.top nav button.navbtn.active{background:var(--sage-soft);color:var(--teal-deep);}
+  header.top nav button.navbtn:hover:not(.active){background:#F0F3F1;}
+  #userTag{font-size:13px;color:var(--ink-soft);margin-left:10px;padding-left:10px;border-left:1px solid var(--line);}
+  #logoutBtn{display:none;}
+
+  main{max-width:960px;margin:0 auto;padding:0 24px 100px;}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono';font-size:11.5px;letter-spacing:0.14em;
+    text-transform:uppercase;color:var(--sage);margin-bottom:12px;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:"";width:16px;height:1px;background:var(--sage);display:inline-block;}
+  .lede{color:var(--ink-soft);font-size:16.5px;margin:12px 0 30px;max-width:58ch;line-height:1.6;}
+
+  .panel{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:28px;
+    box-shadow:0 1px 2px rgba(20,40,38,0.03);
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:7px;text-transform:uppercase;letter-spacing:0.03em;}
+  input, select{
+    width:100%;padding:12px 14px;border:1.5px solid var(--line);
+    border-radius:9px;font-family:inherit;font-size:14.5px;
+    background:#FCFDFD;color:var(--ink);transition:border-color .15s ease;
+  }
+  input:focus, select:focus{border-color:var(--sage); outline:none; box-shadow:0 0 0 3px var(--sage-soft);}
+  button:focus-visible{outline:2px solid var(--sage);outline-offset:2px;}
+  .field{margin-bottom:17px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--teal);color:#fff;border:none;border-radius:9px;
+    padding:13px 22px;font-family:'IBM Plex Sans';font-weight:600;font-size:14.5px;
+    cursor:pointer;transition:all .18s ease;
+  }
+  .btn:hover{background:var(--teal-deep); transform:translateY(-1px); box-shadow:0 6px 16px -6px rgba(21,76,74,0.5);}
+  .btn:active{transform:translateY(0);}
+  .btn.secondary{background:transparent;color:var(--teal);border:1.5px solid var(--teal);}
+  .btn.secondary:hover{background:var(--sage-soft); box-shadow:none;}
+  .btn.full{width:100%;}
+  .switchline{text-align:center;margin-top:18px;font-size:13.5px;color:var(--ink-soft);}
+  .switchline a{color:var(--teal);cursor:pointer;font-weight:600;text-decoration:none;border-bottom:1.5px solid var(--sage-soft);}
+  .switchline a:hover{border-bottom-color:var(--teal);}
+  .msg{font-size:13.5px;padding:11px 15px;border-radius:8px;margin-bottom:16px;animation:fadeUp .3s ease;}
+  .msg.err{background:var(--coral-soft);color:var(--coral);}
+  .msg.ok{background:var(--sage-soft);color:var(--teal-deep);}
+
+  .view{display:none;}
+  .view.active{display:block; animation:fadeUp .35s ease;}
+
+  /* ---- Hero / Auth landing ---- */
+  .hero-wrap{
+    display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px;
+    align-items:center; padding:56px 0 20px;
+  }
+  .hero-copy h2{font-size:38px; line-height:1.12; margin-bottom:16px;}
+  .hero-copy .accent{color:var(--sage);}
+  .stat-row{display:flex; gap:28px; margin-top:34px;}
+  .stat-row .stat b{font-family:'Newsreader'; font-size:26px; display:block; color:var(--teal);}
+  .stat-row .stat span{font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;}
+
+  .hero-visual{
+    position:relative; background:linear-gradient(160deg, var(--teal-deep), var(--teal));
+    border-radius:20px; padding:34px; color:#fff; overflow:hidden;
+    min-height:340px; display:flex; flex-direction:column; justify-content:space-between;
+    animation:floatSlow 6s ease-in-out infinite;
+  }
+  .hero-visual::before{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 80% 10%, rgba(255,255,255,0.10), transparent 55%);
+  }
+  .hero-visual .tag{
+    font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    background:rgba(255,255,255,0.12); display:inline-block; padding:6px 12px; border-radius:20px;
+    width:fit-content; margin-bottom:16px;
+  }
+  .hero-visual .pulseline{opacity:0.9;}
+  .hero-visual .pulseline path{stroke:#EFF7F2;}
+  .hero-visual .chips-demo{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+  .hero-visual .chips-demo span{
+    background:rgba(255,255,255,0.14); padding:6px 12px; border-radius:20px; font-size:12.5px;
+  }
+  .hero-visual .quote{font-family:'Newsreader'; font-style:italic; font-size:16px; line-height:1.5; margin-top:26px; opacity:.92;}
+
+  .auth-panel{max-width:420px; margin:10px auto 0;}
+
+  /* ---- Symptom picker ---- */
+  #symptomSearch{margin-bottom:14px;}
+  .chiplist{
+    display:flex;flex-wrap:wrap;gap:8px;
+    max-height:280px;overflow-y:auto;
+    border:1px solid var(--line);border-radius:10px;padding:14px;
+    background:#FCFDFD;
+  }
+  .chip{
+    padding:7px 14px;border-radius:20px;border:1.5px solid var(--line);
+    background:#fff;font-size:13px;cursor:pointer;color:var(--ink-soft);
+    transition:all .14s ease;user-select:none;
+  }
+  .chip:hover{border-color:var(--sage); transform:translateY(-1px);}
+  .chip.selected{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .selected-strip{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;min-height:20px;}
+  .selected-strip .chip.selected .x{margin-left:7px;opacity:.75;}
+  .count-line{font-size:13px;color:var(--ink-soft);margin-bottom:8px;font-weight:500;}
+
+  /* ---- Results ---- */
+  .disclaimer{
+    font-size:13px;color:var(--ink-soft);background:#F0F3F1;
+    border-left:3px solid var(--sage);padding:11px 15px;border-radius:6px;margin-bottom:20px;
+  }
+  .risk-banner{padding:15px 19px;border-radius:10px;margin-bottom:22px;font-size:14.5px;font-weight:500; display:flex; align-items:center; gap:10px;}
+  .risk-banner.Mild{background:var(--sage-soft);color:var(--teal-deep);}
+  .risk-banner.Moderate{background:var(--amber-soft);color:#8A5C15;}
+  .risk-banner.Severe{background:var(--coral-soft);color:var(--coral);}
+
+  .result-card{
+    border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:14px;
+    background:var(--panel); opacity:0; animation:fadeUp .4s ease forwards;
+    transition:box-shadow .2s ease, border-color .2s ease;
+  }
+  .result-card:hover{box-shadow:0 8px 20px -10px rgba(20,40,38,0.15); border-color:#CBD8D3;}
+  .result-card .rtop{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+  .result-card .rank{font-family:'IBM Plex Mono'; font-size:11px; color:var(--sage); margin-bottom:4px; display:block;}
+  .result-card h3{font-size:20px;}
+  .badge{
+    font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.04em;
+    padding:5px 10px;border-radius:20px;white-space:nowrap;font-weight:500;
+  }
+  .badge.Mild{background:var(--sage-soft);color:var(--teal-deep);}
+  .badge.Moderate{background:var(--amber-soft);color:#8A5C15;}
+  .badge.Severe{background:var(--coral-soft);color:var(--coral);}
+  .matchbar-wrap{margin:14px 0 10px;}
+  .matchbar-track{height:7px;background:#EAEFEC;border-radius:4px;overflow:hidden;}
+  .matchbar-fill{height:100%;background:linear-gradient(90deg, var(--sage), var(--teal-glow));border-radius:4px;width:0; transition:width 1s cubic-bezier(.2,.8,.2,1);}
+  .matchlabel{font-family:'IBM Plex Mono';font-size:12px;color:var(--ink-soft);margin-top:7px;}
+  .result-card p.desc{color:var(--ink-soft);font-size:14px;line-height:1.55;margin:12px 0;}
+  .aid{font-size:13.5px;background:#FCFDFD;border:1px solid var(--line);border-radius:8px;padding:11px 14px;margin-top:10px;color:var(--ink-soft);}
+  .aid b{color:var(--ink);}
+
+  .empty{text-align:center;padding:54px 20px;color:var(--ink-soft); animation:fadeUp .3s ease;}
+  .empty .icon{font-size:28px; margin-bottom:10px; display:block;}
+
+  /* ---- History ---- */
+  .hist-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:17px 21px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;
+    background:var(--panel); opacity:0; animation:fadeUp .35s ease forwards;
+    transition:box-shadow .2s ease;
+  }
+  .hist-item:hover{box-shadow:0 6px 16px -10px rgba(20,40,38,0.18);}
+  .hist-item .hleft h4{font-size:15.5px;margin-bottom:4px;}
+  .hist-item .hleft .syms{font-size:12.5px;color:var(--ink-soft);}
+  .hist-item .hright{text-align:right;}
+  .hist-item .hright .pct{font-family:'IBM Plex Mono';font-size:15px;color:var(--teal); font-weight:500;}
+  .hist-item .hright .date{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+
+  .loading{color:var(--ink-soft);font-size:14px;padding:20px 0;}
+  .section-heading{font-size:28px; margin-bottom:6px;}
+
+  @media (max-width: 780px){
+    .hero-wrap{grid-template-columns:1fr; padding-top:30px;}
+    .hero-copy h2{font-size:30px;}
+    header.top{padding:16px 20px;}
+    main{padding:0 18px 80px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+    <h1>Symptom Checker</h1>
+  </div>
+  <nav id="navBar">
+    <button data-view="checker" class="navbtn">Check symptoms</button>
+    <button data-view="history" class="navbtn">History</button>
+    <span id="userTag"></span>
+    <button id="logoutBtn" class="btn secondary" style="padding:8px 16px;font-size:13px;">Log out</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- AUTH VIEW -->
+  <section id="view-auth" class="view active">
+    <div class="hero-wrap">
+      <div class="hero-copy">
+        <span class="eyebrow">Symptom-first, not diagnosis-first</span>
+        <h2>Understand what your body <span class="accent">might</span> be telling you.</h2>
+        <p class="lede">Select what you're feeling. Get a ranked, honest read of possible conditions — with match confidence, severity, and first-aid guidance. Never a diagnosis, always a next step.</p>
+        <div class="stat-row">
+          <div class="stat"><b>80+</b><span>Symptoms tracked</span></div>
+          <div class="stat"><b>40+</b><span>Conditions mapped</span></div>
+          <div class="stat"><b>2+</b><span>Symptom minimum for a match</span></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div>
+          <span class="tag">Live pattern match</span>
+          <div class="pulse pulseline"><svg viewBox="0 0 400 28" preserveAspectRatio="none"><path d="M0,14 L120,14 L134,4 L146,24 L158,14 L400,14"/></svg></div>
+          <div class="chips-demo">
+            <span>Fever</span><span>Cough</span><span>Fatigue</span><span>Headache</span>
+          </div>
+        </div>
+        <div class="quote">"83% match — Common Flu. Self-care may help, but monitor your symptoms."</div>
+      </div>
+    </div>
+
+    <div class="panel auth-panel">
+      <div id="authMsg"></div>
+
+      <div id="loginForm">
+        <h3 style="margin-bottom:20px;">Log in</h3>
+        <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+        <button class="btn full" onclick="doLogin()">Log in</button>
+        <p class="switchline">New here? <a onclick="toggleAuth('register')">Create an account</a></p>
+      </div>
+
+      <div id="registerForm" style="display:none;">
+        <h3 style="margin-bottom:20px;">Create your account</h3>
+        <div class="field"><label>Full name</label><input type="text" id="regName" placeholder="Jane Doe"></div>
+        <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="regPassword" placeholder="••••••••"></div>
+        <div class="grid2">
+          <div class="field"><label>Age</label><input type="number" id="regAge" placeholder="25"></div>
+          <div class="field"><label>Gender</label>
+            <select id="regGender"><option>Female</option><option>Male</option><option>Other</option></select>
+          </div>
+        </div>
+        <button class="btn full" onclick="doRegister()">Create account</button>
+        <p class="switchline">Already registered? <a onclick="toggleAuth('login')">Log in</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHECKER VIEW -->
+  <section id="view-checker" class="view">
+    <div style="padding-top:36px;">
+      <span class="eyebrow">Step 1 of 2</span>
+      <h2 class="section-heading">What are you feeling?</h2>
+      <p class="lede">Select every symptom that applies. The more you select, the more confident the read.</p>
+    </div>
+
+    <div class="panel">
+      <input type="text" id="symptomSearch" placeholder="Search symptoms — e.g. head, fever, joint..." oninput="renderSymptomChips()">
+      <div class="count-line" id="selCount">0 symptoms selected</div>
+      <div class="selected-strip" id="selectedStrip"></div>
+      <div class="chiplist" id="symptomChips"></div>
+      <button class="btn full" style="margin-top:20px;" onclick="runPrediction()">Check my symptoms</button>
+    </div>
+
+    <div id="resultsArea" style="margin-top:36px;"></div>
+  </section>
+
+  <!-- HISTORY VIEW -->
+  <section id="view-history" class="view">
+    <div style="padding-top:36px;">
+      <span class="eyebrow">Your record</span>
+      <h2 class="section-heading">Past checks</h2>
+      <p class="lede">A running log of what you've checked before, for your own reference — not a medical record.</p>
+    </div>
+    <div id="historyList"></div>
+  </section>
+
+</main>
+
+<script>
+const API = "http://localhost:8080";
+let currentUser = JSON.parse(localStorage.getItem("scUser") || "null");
+let allSymptoms = [];
+let selectedIds = new Set();
+
+function showView(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active", b.dataset.view===name));
+  if(name==="history") loadHistory();
+}
+document.querySelectorAll(".navbtn").forEach(b=>{
+  b.addEventListener("click", ()=>showView(b.dataset.view));
+});
+
+function refreshHeader(){
+  const tag = document.getElementById("userTag");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const navBtns = document.querySelectorAll(".navbtn");
+  if(currentUser){
+    tag.textContent = "Hi, " + currentUser.fullName.split(" ")[0];
+    logoutBtn.style.display = "inline-flex";
+    navBtns.forEach(b=>b.style.display="inline-block");
+    showView("checker");
+  } else {
+    tag.textContent = "";
+    logoutBtn.style.display = "none";
+    navBtns.forEach(b=>b.style.display="none");
+    showView("auth");
+  }
+}
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  currentUser = null;
+  localStorage.removeItem("scUser");
+  refreshHeader();
+});
+
+function toggleAuth(which){
+  document.getElementById("loginForm").style.display = which==="login" ? "block":"none";
+  document.getElementById("registerForm").style.display = which==="register" ? "block":"none";
+  document.getElementById("authMsg").innerHTML = "";
+}
+function showAuthMsg(text, type){
+  document.getElementById("authMsg").innerHTML = `<div class="msg ${type}">${text}</div>`;
+}
+
+async function doRegister(){
+  const body = {
+    fullName: document.getElementById("regName").value,
+    email: document.getElementById("regEmail").value,
+    password: document.getElementById("regPassword").value,
+    age: parseInt(document.getElementById("regAge").value) || null,
+    gender: document.getElementById("regGender").value
+  };
+  if(!body.fullName || !body.email || !body.password){
+    showAuthMsg("Please fill in all fields.", "err"); return;
+  }
+  try{
+    const res = await fetch(API+"/users", {
+      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error();
+    showAuthMsg("Account created. You can log in now.", "ok");
+    toggleAuth("login");
+    document.getElementById("loginEmail").value = body.email;
+  }catch(e){
+    showAuthMsg("Couldn't create account. Email may already be in use.", "err");
+  }
+}
+
+async function doLogin(){
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  if(!email || !password){ showAuthMsg("Enter your email and password.", "err"); return; }
+  try{
+    const res = await fetch(API+"/users/login", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if(!data.success){ showAuthMsg(data.message || "Login failed.", "err"); return; }
+    currentUser = { id: data.userId, fullName: data.fullName, email };
+    localStorage.setItem("scUser", JSON.stringify(currentUser));
+    refreshHeader();
+  }catch(e){
+    showAuthMsg("Couldn't reach the server. Is the backend running?", "err");
+  }
+}
+
+async function loadSymptoms(){
+  try{
+    const res = await fetch(API+"/symptoms");
+    allSymptoms = await res.json();
+    renderSymptomChips();
+  }catch(e){
+    document.getElementById("symptomChips").innerHTML = `<div class="loading">Couldn't load symptoms — check the backend is running on port 8080.</div>`;
+  }
+}
+function renderSymptomChips(){
+  const q = document.getElementById("symptomSearch").value.toLowerCase();
+  const list = allSymptoms.filter(s=>s.name.toLowerCase().includes(q));
+  const container = document.getElementById("symptomChips");
+  container.innerHTML = list.map(s=>`
+    <div class="chip ${selectedIds.has(s.id)?'selected':''}" onclick="toggleSymptom(${s.id})">${s.name}</div>
+  `).join("") || `<div class="loading">No symptoms match "${q}".</div>`;
+}
+function toggleSymptom(id){
+  if(selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  renderSymptomChips();
+  renderSelectedStrip();
+}
+function renderSelectedStrip(){
+  const strip = document.getElementById("selectedStrip");
+  const count = document.getElementById("selCount");
+  count.textContent = selectedIds.size + " symptom" + (selectedIds.size===1?"":"s") + " selected";
+  strip.innerHTML = [...selectedIds].map(id=>{
+    const s = allSymptoms.find(x=>x.id===id);
+    if(!s) return "";
+    return `<div class="chip selected">${s.name}<span class="x" onclick="toggleSymptom(${id})">✕</span></div>`;
+  }).join("");
+}
+
+async function runPrediction(){
+  const area = document.getElementById("resultsArea");
+  if(selectedIds.size === 0){
+    area.innerHTML = `<div class="empty"><span class="icon">◌</span>Select at least a couple of symptoms to check.</div>`;
+    return;
+  }
+  area.innerHTML = `<div class="loading">Checking against known patterns…</div>`;
+  try{
+    const res = await fetch(API+"/diseases/predict", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        symptomIds: [...selectedIds],
+        userId: currentUser ? currentUser.id : null
+      })
+    });
+    const data = await res.json();
+    renderResults(data);
+  }catch(e){
+    area.innerHTML = `<div class="empty">Couldn't reach the server. Is the backend running on port 8080?</div>`;
+  }
+}
+
+function renderResults(data){
+  const area = document.getElementById("resultsArea");
+  let html = `<div class="pulse"><svg viewBox="0 0 600 28" preserveAspectRatio="none"><path d="M0,14 L180,14 L200,4 L215,24 L230,14 L600,14"/></svg></div>`;
+  html += `<div class="disclaimer">${data.disclaimer || "This tool does not provide a medical diagnosis."}</div>`;
+
+  if(data.infoNote){
+    html += `<div class="risk-banner Mild">${data.riskAdvice}</div>`;
+    html += `<div class="result-card"><p class="desc" style="font-size:15px;color:var(--ink);">${data.infoNote}</p></div>`;
+    area.innerHTML = html;
+    return;
+  }
+
+  if(!data.predictions || data.predictions.length === 0){
+    html += `<div class="empty"><span class="icon">◌</span>${data.message || "No strong matches found. Try adding more symptoms."}</div>`;
+    area.innerHTML = html;
+    return;
+  }
+
+  if(data.riskAdvice){
+    const sev = data.predictions[0].disease.severityLevel;
+    html += `<div class="risk-banner ${sev}">${data.riskAdvice}</div>`;
+  }
+
+  data.predictions.forEach((p, i)=>{
+    const d = p.disease;
+    html += `
+      <div class="result-card" style="animation-delay:${i*0.08}s">
+        <span class="rank">Match ${i+1}</span>
+        <div class="rtop">
+          <h3>${d.name}</h3>
+          <span class="badge ${d.severityLevel}">${d.severityLevel}</span>
+        </div>
+        <div class="matchbar-wrap">
+          <div class="matchbar-track"><div class="matchbar-fill" data-w="${p.matchPercentage}"></div></div>
+          <div class="matchlabel">${p.matchedSymptomCount} of ${p.totalDiseaseSymptoms} typical symptoms matched — ${p.matchPercentage}%</div>
+        </div>
+        <p class="desc">${d.description}</p>
+        <div class="aid"><b>If this fits:</b> ${d.firstAidAdvice}</div>
+      </div>
+    `;
+  });
+  area.innerHTML = html;
+  requestAnimationFrame(()=>{
+    document.querySelectorAll(".matchbar-fill").forEach(el=>{
+      el.style.width = el.dataset.w + "%";
+    });
+  });
+}
+
+async function loadHistory(){
+  const list = document.getElementById("historyList");
+  if(!currentUser){
+    list.innerHTML = `<div class="empty">Log in to see your history.</div>`;
+    return;
+  }
+  list.innerHTML = `<div class="loading">Loading…</div>`;
+  try{
+    const res = await fetch(API+"/history/"+currentUser.id);
+    const data = await res.json();
+    if(data.length===0){
+      list.innerHTML = `<div class="empty"><span class="icon">◌</span>No checks yet. Run your first symptom check to see it here.</div>`;
+      return;
+    }
+    list.innerHTML = data.slice().reverse().map((h,i)=>`
+      <div class="hist-item" style="animation-delay:${i*0.05}s">
+        <div class="hleft">
+          <h4>${h.predictedDisease}</h4>
+          <div class="syms">${h.selectedSymptoms}</div>
+        </div>
+        <div class="hright">
+          <div class="pct">${h.matchPercentage}%</div>
+          <div class="date">${new Date(h.checkedAt).toLocaleString()}</div>
+        </div>
+      </div>
+    `).join("");
+  }catch(e){
+    list.innerHTML = `<div class="empty">Couldn't load history.</div>`;
+  }
+}
+
+refreshHeader();
+loadSymptoms();
+</script>
+
+</body>
+</html>

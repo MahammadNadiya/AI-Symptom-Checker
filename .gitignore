@@ -1,0 +1,4 @@
+backend/backend/target/
+backend/backend/.idea/
+*.iml
+backend/backend/src/main/resources/application.properties
