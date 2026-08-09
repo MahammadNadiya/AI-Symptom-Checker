@@ -466,6 +466,12 @@ async function loadSymptoms(){
 }
 function renderSymptomChips(){
   const q = document.getElementById("symptomSearch").value.toLowerCase();
+  const list = allSymptoms.filter(s=>s.name.toLowerCase().includes(q));
+  const container = document.getElementById("symptomChips");
+  container.innerHTML = list.map(s=>`
+    <div class="chip ${selectedIds.has(s.id)?'selected':''}" onclick="toggleSymptom(${s.id})">${s.name}</div>
+  `).join("") || `<div class="loading">No symptoms match "${q}".</div>`;
+}
 
 async function askAi(){
   const desc = document.getElementById("aiDescription").value.trim();
@@ -494,12 +500,6 @@ async function askAi(){
   }
 }
 
-  const list = allSymptoms.filter(s=>s.name.toLowerCase().includes(q));
-  const container = document.getElementById("symptomChips");
-  container.innerHTML = list.map(s=>`
-    <div class="chip ${selectedIds.has(s.id)?'selected':''}" onclick="toggleSymptom(${s.id})">${s.name}</div>
-  `).join("") || `<div class="loading">No symptoms match "${q}".</div>`;
-}
 function toggleSymptom(id){
   if(selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
   renderSymptomChips();
