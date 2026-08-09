@@ -335,6 +335,13 @@
       <p class="lede">Select every symptom that applies. The more you select, the more confident the read.</p>
     </div>
 
+    <div class="panel" style="margin-bottom:20px;">
+      <label style="margin-bottom:8px;">Not sure what to call it? Describe it in your own words</label>
+      <textarea id="aiDescription" rows="2" placeholder="e.g. I feel dizzy, my head hurts, and I can't focus on anything" style="width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:9px;font-family:inherit;font-size:14.5px;background:#FCFDFD;color:var(--ink);resize:vertical;"></textarea>
+      <div id="aiMsg" style="margin-top:10px;"></div>
+      <button class="btn secondary" style="margin-top:10px;" onclick="askAi()">Ask AI to find matching symptoms</button>
+    </div>
+
     <div class="panel">
       <input type="text" id="symptomSearch" placeholder="Search symptoms — e.g. head, fever, joint..." oninput="renderSymptomChips()">
       <div class="count-line" id="selCount">0 symptoms selected</div>
@@ -459,6 +466,34 @@ async function loadSymptoms(){
 }
 function renderSymptomChips(){
   const q = document.getElementById("symptomSearch").value.toLowerCase();
+
+async function askAi(){
+  const desc = document.getElementById("aiDescription").value.trim();
+  const msgEl = document.getElementById("aiMsg");
+  if(!desc){
+    msgEl.innerHTML = `<div class="msg err">Describe how you're feeling first.</div>`;
+    return;
+  }
+  msgEl.innerHTML = `<div class="loading">Thinking…</div>`;
+  try{
+    const res = await fetch(API+"/ai/match-symptoms", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ description: desc })
+    });
+    const data = await res.json();
+    if(data.matchedSymptoms && data.matchedSymptoms.length > 0){
+      data.matchedSymptoms.forEach(s => selectedIds.add(s.id));
+      renderSymptomChips();
+      renderSelectedStrip();
+      msgEl.innerHTML = `<div class="msg ok">${data.message} Added: ${data.matchedSymptoms.map(s=>s.name).join(", ")}</div>`;
+    } else {
+      msgEl.innerHTML = `<div class="msg err">${data.message}</div>`;
+    }
+  }catch(e){
+    msgEl.innerHTML = `<div class="msg err">Couldn't reach the AI assistant. Try again or select symptoms manually.</div>`;
+  }
+}
+
   const list = allSymptoms.filter(s=>s.name.toLowerCase().includes(q));
   const container = document.getElementById("symptomChips");
   container.innerHTML = list.map(s=>`
