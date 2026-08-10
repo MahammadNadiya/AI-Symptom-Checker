@@ -4,7 +4,7 @@ A full-stack symptom-checking application that allows users to select their symp
 
 The project follows a **safety-first design**: it avoids producing disease matches from a single symptom and clearly communicates that its results are informational and not medical diagnoses.
 
-> ⚠️ \*\*Disclaimer:\*\* This project is intended for educational and portfolio purposes only. It does not provide medical diagnoses and should not be used as a substitute for professional medical advice. Always consult a qualified healthcare professional for real health concerns.
+> ⚠️ \\\*\\\*Disclaimer:\\\*\\\* This project is intended for educational and portfolio purposes only. It does not provide medical diagnoses and should not be used as a substitute for professional medical advice. Always consult a qualified healthcare professional for real health concerns.
 
 🔗 **Live site:** [mahammadnadiya.github.io/AI-Symptom-Checker](https://mahammadnadiya.github.io/AI-Symptom-Checker/)
 🔗 **Backend:** Spring Boot API deployed on Render and connected to a cloud MySQL database.
@@ -23,7 +23,7 @@ Instead of immediately displaying a disease based on a single symptom, the appli
 * **Transparent symptom coverage** — results show the number of matched symptoms and the corresponding coverage percentage, for example, **5 of 6 symptoms matched — 83%**.
 * **Severity-aware guidance** — the severity associated with a matched condition is used to determine the type of general guidance shown to the user.
 
-> \*\*Important:\*\* Symptom coverage is not the probability that a user has a disease. It is only a measure of how many stored symptoms for a condition matched the user's selected symptoms.
+> \\\*\\\*Important:\\\*\\\* Symptom coverage is not the probability that a user has a disease. It is only a measure of how many stored symptoms for a condition matched the user's selected symptoms.
 
 \---
 
@@ -244,7 +244,7 @@ cd AI-Symptom-Checker
 Open MySQL and run:
 
 ```
-CREATE DATABASE symptom\_checker;
+CREATE DATABASE symptom\\\_checker;
 
 ```
 
@@ -260,18 +260,18 @@ backend/backend/src/main/resources/application.properties
 Add your local database configuration:
 
 ```
-spring.datasource.url=jdbc:mysql://localhost:3306/symptom\_checker
+spring.datasource.url=jdbc:mysql://localhost:3306/symptom\\\_checker
 spring.datasource.username=root
-spring.datasource.password=YOUR\_MYSQL\_PASSWORD
+spring.datasource.password=YOUR\\\_MYSQL\\\_PASSWORD
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 
-GEMINI\_API\_KEY=YOUR\_GEMINI\_API\_KEY
+GEMINI\\\_API\\\_KEY=YOUR\\\_GEMINI\\\_API\\\_KEY
 
 ```
 
-> \*\*Security:\*\* Never commit your real database password or Gemini API key to GitHub. Keep `application.properties` in `.gitignore` or use environment variables/secrets for deployment.
+> \\\*\\\*Security:\\\*\\\* Never commit your real database password or Gemini API key to GitHub. Keep `application.properties` in `.gitignore` or use environment variables/secrets for deployment.
 
 ### 4\. Run the backend
 
@@ -322,35 +322,69 @@ http://localhost:8080
 
 *Add screenshots of the following pages here:*
 
-\### Login / Registration
+\## Screenshots
 
 
 
-!\[Login](screenshots/login.png)
+The application provides a complete workflow for authentication, AI-assisted symptom selection, prediction results, and medical history.
 
 
 
-\### Prediction Results
+<table>
+
+&#x20; <tr>
+
+&#x20;   <td align="center"><strong>Login / Registration</strong></td>
+
+&#x20;   <td align="center"><strong>AI Symptom Assistant</strong></td>
+
+&#x20; </tr>
+
+&#x20; <tr>
+
+&#x20;   <td align="center">
+
+&#x20;     <img src="screenshots/login.png" alt="Login / Registration" width="420">
+
+&#x20;   </td>
+
+&#x20;   <td align="center">
+
+&#x20;     <img src="screenshots/ai-assistant.png" alt="AI Symptom Assistant" width="420">
+
+&#x20;   </td>
+
+&#x20; </tr>
+
+&#x20; <tr>
+
+&#x20;   <td align="center"><strong>Prediction Results</strong></td>
+
+&#x20;   <td align="center"><strong>Prediction History</strong></td>
+
+&#x20; </tr>
+
+&#x20; <tr>
+
+&#x20;   <td align="center">
+
+&#x20;     <img src="screenshots/results.png" alt="Prediction Results" width="420">
+
+&#x20;   </td>
+
+&#x20;   <td align="center">
+
+&#x20;     <img src="screenshots/history.png" alt="Prediction History" width="420">
+
+&#x20;   </td>
+
+&#x20; </tr>
+
+</table>
 
 
 
-!\[Prediction Results](screenshots/results.png)
-
-
-
-\### AI Symptom Assistant
-
-
-
-!\[AI Symptom Assistant](screenshots/ai-assistant.png)
-
-
-
-\### Prediction History
-
-
-
-!\[Prediction History](screenshots/history.png)---
+\---
 
 ## Challenges and Solutions
 
